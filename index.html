@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICD-10-CM Code Hunt Lab — Part 2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#f4f6fb;--surf:#ffffff;--surf2:#eef1f9;--surf3:#e4e9f4;
+  --bdr:#d1d9ee;--text:#1a2340;--muted:#6b7a9a;
+  --blue:#2563eb;--blue-l:#dbeafe;--blue-m:#93c5fd;
+  --green:#16a34a;--green-l:#dcfce7;--green-m:#86efac;
+  --yellow:#ca8a04;--yellow-l:#fef9c3;--yellow-m:#fde047;
+  --red:#dc2626;--red-l:#fee2e2;--red-m:#fca5a5;
+  --orange:#ea580c;--orange-l:#ffedd5;--orange-m:#fdba74;
+  --violet:#7c3aed;--violet-l:#ede9fe;--violet-m:#c4b5fd;
+  --teal:#0891b2;--teal-l:#cffafe;--teal-m:#67e8f9;
+  --pink:#db2777;--pink-l:#fce7f3;
+  --r:8px;--r2:14px;--r3:20px;
+  --shadow:0 2px 12px rgba(37,99,235,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--blue-m);border-radius:3px}
+.hdr{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 50%,#0891b2 100%);color:#fff;padding:0 20px;position:sticky;top:0;z-index:300;box-shadow:0 3px 20px rgba(30,58,138,.4)}
+.hdr-top{display:flex;align-items:center;gap:14px;padding:14px 0 10px;flex-wrap:wrap}
+.logo-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.3)}
+.hdr-title{font-size:clamp(13px,2vw,18px);font-weight:700}
+.hdr-sub{font-size:11px;opacity:.75;margin-top:2px}
+.part-badge{margin-left:auto;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.score-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+.tab-nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.tab-nav::-webkit-scrollbar{display:none}
+.tb{padding:8px 13px;border:none;background:transparent;color:rgba(255,255,255,.65);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;border-radius:6px 6px 0 0}
+.tb:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tb.active{color:#fff;border-bottom-color:#fff;background:rgba(255,255,255,.14)}
+.main{max-width:1140px;margin:0 auto;padding:24px 16px 80px}
+.sec{display:none;animation:fadeIn .3s ease}.sec.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sh{margin-bottom:24px}
+.sh h2{font-size:clamp(18px,3.5vw,26px);font-weight:700;margin-bottom:4px}
+.sh p{font-size:13.5px;color:var(--muted);max-width:680px}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r2);padding:18px;box-shadow:var(--shadow)}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.g2,.g3{grid-template-columns:1fr}}
+.ct{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.al{padding:11px 15px;border-radius:var(--r);margin-bottom:12px;font-size:12.5px;border-left:4px solid;display:flex;gap:9px;align-items:flex-start;line-height:1.65}
+.al-bl{background:var(--blue-l);border-color:var(--blue);color:#1e3a8a}
+.al-gr{background:var(--green-l);border-color:var(--green);color:#14532d}
+.al-ye{background:var(--yellow-l);border-color:var(--yellow);color:#78350f}
+.al-re{background:var(--red-l);border-color:var(--red);color:#7f1d1d}
+.al-or{background:var(--orange-l);border-color:var(--orange);color:#7c2d12}
+.al-vi{background:var(--violet-l);border-color:var(--violet);color:#3b0764}
+.al-te{background:var(--teal-l);border-color:var(--teal);color:#164e63}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r);border:none;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-bl{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+.btn-bl:hover{background:#1d4ed8;transform:translateY(-1px)}
+.btn-gr{background:var(--green);color:#fff}
+.btn-gr:hover{background:#15803d}
+.btn-vi{background:var(--violet);color:#fff}
+.btn-vi:hover{background:#6d28d9}
+.btn-or{background:var(--orange);color:#fff}
+.btn-sm{padding:6px 12px;font-size:11.5px}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr);color:var(--text)}
+.btn-ghost:hover{background:var(--surf2)}
+.hint-btn{background:var(--yellow-l);border:1.5px solid var(--yellow-m);color:#78350f;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;transition:all .18s}
+.hint-btn:hover{background:var(--yellow-m)}
+.think-btn{background:var(--violet-l);border:1.5px solid var(--violet-m);color:#3b0764;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;transition:all .18s}
+.think-btn:hover{background:var(--violet-m)}
+.why-btn{background:var(--orange-l);border:1.5px solid var(--orange-m);color:#7c2d12;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;transition:all .18s}
+.why-btn:hover{background:var(--orange-m)}
+.hl{border-radius:var(--r);padding:10px 13px;margin:7px 0;font-size:12.5px;line-height:1.7}
+.hl-bl{background:var(--blue-l);border:1px solid var(--blue-m)}
+.hl-gr{background:var(--green-l);border:1px solid var(--green-m)}
+.hl-ye{background:var(--yellow-l);border:1px solid var(--yellow-m)}
+.hl-re{background:var(--red-l);border:1px solid var(--red-m)}
+.hl-vi{background:var(--violet-l);border:1px solid var(--violet-m)}
+.hl-or{background:var(--orange-l);border:1px solid var(--orange-m)}
+.hl-sl{background:var(--surf2);border:1px solid var(--bdr)}
+.hl-te{background:var(--teal-l);border:1px solid var(--teal-m)}
+.qo{display:block;width:100%;text-align:left;padding:10px 13px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:var(--r);color:var(--text);font-size:12.5px;cursor:pointer;margin-bottom:6px;transition:all .18s;line-height:1.5}
+.qo:hover:not(:disabled){background:var(--blue-l);border-color:var(--blue-m)}
+.qo.cor{background:var(--green-l);border-color:var(--green);color:#14532d}
+.qo.wrg{background:var(--red-l);border-color:var(--red);color:#7f1d1d}
+.qo:disabled{cursor:not-allowed}
+.fb{display:none;padding:11px 13px;border-radius:var(--r);margin-top:8px;font-size:12.5px;line-height:1.65}
+.fb-c{display:block;background:var(--green-l);border:1.5px solid var(--green);color:#14532d}
+.fb-w{display:block;background:var(--red-l);border:1.5px solid var(--red);color:#7f1d1d}
+.rv{display:none}.rv.open{display:block;animation:fadeIn .2s ease;margin-top:10px;padding-top:10px;border-top:1.5px dashed var(--bdr)}
+.stabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}
+.st{padding:7px 13px;border-radius:20px;border:1.5px solid var(--bdr);background:var(--surf);color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s}
+.st:hover{border-color:var(--blue-m);color:var(--blue)}
+.st.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.ss{display:none}.ss.active{display:block;animation:fadeIn .25s ease}
+.acc{margin-bottom:5px}
+.ah{padding:12px 15px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--r);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:13px;user-select:none;transition:all .2s}
+.ah:hover{background:var(--surf2);border-color:var(--blue-m)}
+.ah.open{background:var(--blue-l);border-color:var(--blue);color:var(--blue);border-radius:var(--r) var(--r) 0 0}
+.aa{transition:transform .25s;color:var(--muted)}
+.ah.open .aa{transform:rotate(180deg);color:var(--blue)}
+.ab{display:none;padding:13px 15px;background:#fff;border:1.5px solid var(--blue-m);border-top:none;border-radius:0 0 var(--r) var(--r);font-size:12.5px;line-height:1.75;color:var(--muted)}
+.ab.open{display:block;animation:fadeIn .2s ease}
+.pw{background:var(--surf3);border-radius:20px;height:8px;overflow:hidden;margin:6px 0}
+.pb{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:20px;transition:width .5s ease}
+.gloss{border-bottom:2px dotted var(--blue);cursor:help;position:relative;display:inline}
+.gloss-tip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1e2d4a;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:11px;line-height:1.5;z-index:200;min-width:190px;max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.25);pointer-events:none}
+.gloss-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1e2d4a}
+.gloss:hover .gloss-tip{display:block}
+.score-box{background:#fff;border:1.5px solid var(--bdr);border-radius:var(--r2);padding:16px;text-align:center;margin-bottom:18px}
+.score-big{font-size:52px;font-weight:700;color:var(--blue);line-height:1;font-family:'Fira Mono',monospace}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700}
+.b-bl{background:var(--blue-l);color:var(--blue)}
+.b-gr{background:var(--green-l);color:var(--green)}
+.b-ye{background:var(--yellow-l);color:var(--yellow)}
+.b-re{background:var(--red-l);color:var(--red)}
+.b-vi{background:var(--violet-l);color:var(--violet)}
+.b-or{background:var(--orange-l);color:var(--orange)}
+.b-te{background:var(--teal-l);color:var(--teal)}
+.tw{overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--bdr)}
+.dt{width:100%;border-collapse:collapse;font-size:12.5px}
+.dt th{background:var(--surf2);padding:9px 13px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1.5px solid var(--bdr)}
+.dt td{padding:9px 13px;border-bottom:1px solid var(--bdr);vertical-align:top;line-height:1.65}
+.dt tr:hover td{background:var(--surf2)}
+.dt tr:last-child td{border-bottom:none}
+.note-box{background:var(--surf2);border:1.5px solid var(--bdr);border-radius:var(--r2);padding:16px;border-left:5px solid var(--blue);margin-bottom:14px;font-size:12.5px;line-height:1.85}
+.note-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+.step-wrap{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.step-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px}
+.step-done{background:linear-gradient(135deg,var(--green),#10b981)}
+.walk-step{padding:14px 16px;border:1.5px solid var(--bdr);border-radius:var(--r2);margin-bottom:10px;background:#fff;transition:all .3s}
+.walk-step.active-step{border-color:var(--blue);background:var(--blue-l)}
+.walk-step.done-step{border-color:var(--green);background:var(--green-l)}
+.mono{font-family:'Fira Mono',monospace}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.pill-bl{background:var(--blue-l);color:var(--blue)}
+.pill-gr{background:var(--green-l);color:var(--green)}
+.pill-ye{background:var(--yellow-l);color:var(--yellow)}
+.pill-re{background:var(--red-l);color:var(--red)}
+.rr{background:var(--surf2);border-left:4px solid var(--blue);border-radius:0 var(--r) var(--r) 0;padding:10px 13px;margin-bottom:7px;font-size:12.5px}
+.rr-gr{border-left-color:var(--green)}
+.rr-re{border-left-color:var(--red)}
+.rr-ye{border-left-color:var(--yellow)}
+.rr-vi{border-left-color:var(--violet)}
+.rr-or{border-left-color:var(--orange)}
+.q-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--blue);color:#fff;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;margin-right:6px}
+.divider{border:none;border-top:1.5px solid var(--bdr);margin:18px 0}
+.footer{text-align:center;padding:20px;font-size:12px;color:var(--muted);border-top:1px solid var(--bdr);margin-top:40px}
+@media(max-width:480px){.tb{padding:6px 8px;font-size:9.5px}.main{padding:14px 10px 60px}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="logo-wrap">
+      <div class="logo">🎯</div>
+      <div>
+        <div class="hdr-title">ICD-10-CM Code Hunt Interactive Lab</div>
+        <div class="hdr-sub">Part 2 — Tricky Wording · Walkthrough · Challenges · Quiz · Rapid Review</div>
+      </div>
+    </div>
+    <div class="part-badge">📗 Part 2 of 2</div>
+    <div class="score-badge">⭐ Score: <span id="global-score">0</span></div>
+  </div>
+  <nav class="tab-nav">
+    <button class="tb active" data-tab="s7">7 Tricky Wording</button>
+    <button class="tb" data-tab="s8">8 Guided Walkthrough</button>
+    <button class="tb" data-tab="s9">9 Practice Challenges</button>
+    <button class="tb" data-tab="s10">10 Quick Quiz</button>
+    <button class="tb" data-tab="s11">11 Rapid Review</button>
+  </nav>
+</header>
+
+<main class="main">
+
+<!-- ===================== SECTION 7: TRICKY WORDING LAB ===================== -->
+<section id="s7" class="sec active">
+  <div class="sh">
+    <h2>🧩 Tricky Wording Lab</h2>
+    <p>When the doctor's words don't match what you expect to find — this is where most students lose points. Train yourself to think beyond exact phrases.</p>
+  </div>
+  <div class="al al-vi" style="margin-bottom:18px">🧠 <span><strong>The #1 advanced coding trap:</strong> The exact phrase in the note does NOT appear anywhere in the code list. You must understand what the provider means and find the code that best represents that clinical concept.</span></div>
+  <div id="s7-content"></div>
+</section>
+
+<!-- ===================== SECTION 8: GUIDED WALKTHROUGH ===================== -->
+<section id="s8" class="sec">
+  <div class="sh">
+    <h2>🧑‍🏫 Guided Walkthrough Mode</h2>
+    <p>The app walks you through every case step by step — like a tutor sitting beside you. Work through each step before revealing the next.</p>
+  </div>
+  <div class="stabs" id="s8-tabs">
+    <button class="st active" onclick="setSt(this,'s8')" data-s="s8-c1">Case A — Fracture</button>
+    <button class="st" onclick="setSt(this,'s8')" data-s="s8-c2">Case B — Obesity</button>
+    <button class="st" onclick="setSt(this,'s8')" data-s="s8-c3">Case C — Diabetes Kidney</button>
+    <button class="st" onclick="setSt(this,'s8')" data-s="s8-c4">Case D — Conjunctivitis</button>
+  </div>
+  <div id="sub-s8-c1" class="ss active" data-p="s8"></div>
+  <div id="sub-s8-c2" class="ss" data-p="s8"></div>
+  <div id="sub-s8-c3" class="ss" data-p="s8"></div>
+  <div id="sub-s8-c4" class="ss" data-p="s8"></div>
+</section>
+
+<!-- ===================== SECTION 9: PRACTICE CHALLENGES ===================== -->
+<section id="s9" class="sec">
+  <div class="sh">
+    <h2>🏋️ Practice Challenges — 30 Items</h2>
+    <p>Mixed format. Main term identification, subterm hunting, branch logic, table navigation, and provider note interpretation. These get progressively harder.</p>
+  </div>
+  <div class="score-box">
+    <div class="score-big" id="s9-score">0/30</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:4px">Practice Challenge Score</div>
+    <div class="pw" style="margin-top:8px"><div class="pb" id="s9-bar" style="width:0%"></div></div>
+  </div>
+  <div id="s9-content"></div>
+</section>
+
+<!-- ===================== SECTION 10: QUICK QUIZ ===================== -->
+<section id="s10" class="sec">
+  <div class="sh">
+    <h2>⚡ Quick Quiz — 35 Questions</h2>
+    <p>Mixed question types. Score tracked. Instant feedback with full rationale. Retry when finished.</p>
+  </div>
+  <div class="score-box">
+    <div class="score-big" id="qz-score">0/35</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:4px" id="qz-lbl">Answer all 35 questions</div>
+    <div class="pw" style="margin-top:8px"><div class="pb" id="qz-bar" style="width:0%"></div></div>
+  </div>
+  <div id="qz-content"></div>
+  <div style="text-align:center;margin-top:20px">
+    <button class="btn btn-bl" onclick="resetQuiz()">🔄 Retry Quiz</button>
+  </div>
+</section>
+
+<!-- ===================== SECTION 11: RAPID REVIEW ===================== -->
+<section id="s11" class="sec">
+  <div class="sh">
+    <h2>⚡ Rapid Review — Study This Before Your Exam</h2>
+    <p>Key facts, rules, cheat sheets, traps, and "if you see this, think this" cards all in one place.</p>
+  </div>
+  <div id="s11-content"></div>
+</section>
+
+</main>
+
+<footer class="footer">
+  Designed and Curriculum Developed by <strong>Hilary Homaii</strong> | ICD-10-CM Code Hunt Interactive Lab — Part 2 of 2
+</footer>
+
+<script>
+// ─────────────────────────────────────────
+// GLOBALS & NAVIGATION
+// ─────────────────────────────────────────
+let globalScore=0;
+function addScore(n){globalScore+=n;document.getElementById('global-score').textContent=globalScore;}
+document.querySelectorAll('.tb').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.sec').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.tab).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+function setSt(btn,pid){
+  btn.closest('.stabs').querySelectorAll('.st').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll(`[data-p="${pid}"]`).forEach(x=>x.classList.remove('active'));
+  document.getElementById('sub-'+btn.dataset.s).classList.add('active');
+}
+function tAcc(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open');}
+function tRv(id){document.getElementById(id).classList.toggle('open');}
+
+// ─────────────────────────────────────────
+// SECTION 7 — TRICKY WORDING LAB
+// ─────────────────────────────────────────
+const s7cases=[
+  {
+    title:'Trap 1: "Blood sugar issues" vs. Diabetes Mellitus',
+    trap:'The doctor writes notes informally. What happens when clinical language in the note doesn\'t look like the code description?',
+    note:'ASSESSMENT: Patient returns for management of blood sugar issues. A1c consistently above 9.0% for the past year. Currently on metformin and a GLP-1 agonist. No associated complications identified at this time.',
+    analysis:[
+      {q:'What clinical phrase in the note does NOT appear in ICD-10-CM?',a:'"Blood sugar issues" — this is informal language. ICD-10-CM uses "diabetes mellitus."'},
+      {q:'How do you know this is diabetes mellitus and not just hyperglycemia?',a:'The management details (A1c monitoring, metformin, GLP-1 agonist) confirm ongoing diabetes management, not a transient glucose elevation.'},
+      {q:'What is the likely type, and what word in the note hints at it?',a:'Type 2 — GLP-1 agonists and metformin are first-line Type 2 agents. Additionally, no mention of insulin-only dependence or juvenile onset.'},
+      {q:'"No associated complications" means we should code which subcategory?',a:'E11.9 — Type 2 diabetes mellitus without complications. Only use "without complications" when the note specifically rules out any complication.'},
+    ],
+    q:'A provider writes "blood sugar issues, no complications." Which code is most appropriate?',
+    opts:['R73.09 — Hyperglycemia, unspecified (not diabetes)','E11.9 — Type 2 diabetes mellitus, without complications','E11.65 — Type 2 DM with hyperglycemia','E13.9 — Other specified diabetes mellitus without complications'],
+    c:1,
+    r:'The clinical context (A1c monitoring, diabetes medications) confirms diabetes mellitus, not just hyperglycemia (R73.09). E11.9 is correct because the provider said "no associated complications." E11.65 (with hyperglycemia) would be used when elevated glucose is the presenting concern, but here the context is ongoing DM management.',
+    bigLesson:'When a provider uses informal wording, your job is to interpret the clinical meaning and match it to the correct code concept — not search for the exact words.'
+  },
+  {
+    title:'Trap 2: "Breathing attack" vs. Asthma Exacerbation',
+    trap:'Patient language in the note vs. clinical coding language.',
+    note:'HISTORY: Patient reports having a "breathing attack" two nights ago. Woke up short of breath, wheezing, used rescue inhaler 3 times before improvement. Known severe persistent asthma.\nASSESSMENT: Acute exacerbation of severe persistent asthma.',
+    analysis:[
+      {q:'The patient called it a "breathing attack." Is that a codeable term?',a:'No — "breathing attack" is patient language. The Assessment line uses correct clinical terminology: "acute exacerbation of severe persistent asthma."'},
+      {q:'Which line in the note do you use for coding?',a:'The Assessment (or Diagnosis) line — this is the provider\'s confirmed clinical interpretation, which takes priority over symptom descriptions and patient-reported terms.'},
+      {q:'Why is the Subjective section (patient history) not the coding source?',a:'Symptoms listed in the Subjective section are not coded when a confirmed diagnosis is present. Code the confirmed diagnosis, not the symptoms that led to it.'},
+      {q:'What words from the Assessment drive the code selection?',a:'"Severe persistent" → J45.5x. "Acute exacerbation" → J45.51. Not "without exacerbation" (J45.50) and not "status asthmaticus" (J45.52).'},
+    ],
+    q:'Which code is correct based on the Assessment line?',
+    opts:['J45.21 — Mild intermittent asthma with acute exacerbation','J45.51 — Severe persistent asthma with acute exacerbation','J45.52 — Severe persistent asthma with status asthmaticus','R06.2 — Wheezing (symptom code)'],
+    c:1,
+    r:'The Assessment explicitly says severe persistent asthma WITH acute exacerbation → J45.51. "Breathing attack" is patient language — never searchable. Status asthmaticus (J45.52) is a different severity than exacerbation — it requires documentation of a prolonged, treatment-resistant attack. Symptom code R06.2 is never used when a confirmed diagnosis is documented.',
+    bigLesson:'Always code from the Assessment/Diagnosis line. Patient-reported language in the Subjective section is not your coding source when a confirmed diagnosis exists.'
+  },
+  {
+    title:'Trap 3: Clinical terminology that "sounds more serious" than the code',
+    trap:'Students often pick the most specific-looking code — even when documentation doesn\'t support it.',
+    note:'ASSESSMENT: Patient has had recurrent ear pain and fluid behind the right eardrum for the past 3 months. No purulent discharge. No fever. Tympanogram shows flat curve consistent with middle ear effusion. Diagnosis: Chronic serous otitis media, right ear.',
+    analysis:[
+      {q:'What is the main term?',a:'Otitis — the condition. "Media" is a subterm (location). "Serous" and "chronic" further narrow the code.'},
+      {q:'"Purulent" means pus. There is no pus here. Which code family is eliminated?',a:'H66 (Suppurative otitis media) — suppurative means pus-forming. The absence of purulent discharge eliminates this family entirely.'},
+      {q:'The note says "serous" — what does this mean for code selection?',a:'"Serous" means thin, watery fluid — this is H65.2 (Chronic serous otitis media), not the acute type or the allergic type.'},
+      {q:'Why would a student wrongly pick H66 here?',a:'Because it "sounds more clinical." Students sometimes pick suppurative because it sounds serious, but it requires documentation of pus/infection — which is specifically ruled out here.'},
+    ],
+    q:'Which code is correct?',
+    opts:['H66.91 — Otitis media, unspecified, right ear','H65.21 — Chronic serous otitis media, right ear','H66.001 — Acute suppurative otitis media, right ear','H65.191 — Other acute nonsuppurative otitis media, right ear'],
+    c:1,
+    r:'Chronic + serous + right ear = H65.21. "Serous" is specifically documented. No pus eliminates H66 (suppurative). "Chronic" (3 months) eliminates the acute codes. H66.91 discards all the documented specificity.',
+    bigLesson:'"More specific looking" does not mean correct. The specificity must be SUPPORTED by the documentation. Choosing suppurative when no pus is documented is a coding error.'
+  },
+  {
+    title:'Trap 4: "Obesity" — when the word does NOT match the subcategory label',
+    trap:'The provider\'s exact word appears in the code family, but you must navigate further to find the right subcategory.',
+    note:'ASSESSMENT: BMI is 41.8. Patient has obesity related to excess caloric intake with no identified endocrine disorder. Counseled on lifestyle modification and nutrition. Diagnosis: Morbid obesity due to excess calories.',
+    analysis:[
+      {q:'What is the main term?',a:'Obesity — the condition. "Morbid" and "due to excess calories" are subterms.'},
+      {q:'"Morbid obesity" sounds like the most specific-looking code. Is that enough?',a:'No — you must identify the ETIOLOGY. "Due to excess calories" is a documented subterm that points to a specific code, not just "morbid obesity NOS."'},
+      {q:'What does "NOS" mean, and why is it a trap here?',a:'NOS = Not Otherwise Specified. If you stop at "morbid obesity NOS," you ignore the documented etiology (excess calories). Always use etiology when documented.'},
+      {q:'How does the note rule out endocrine causes?',a:'The note says "no identified endocrine disorder" — this eliminates obesity codes related to hypothyroidism or hormonal causes. Pure dietary/caloric etiology is confirmed.'},
+    ],
+    q:'Which code best matches "morbid obesity due to excess calories"?',
+    opts:['E66.9 — Obesity, unspecified','E66.01 — Morbid (severe) obesity due to excess calories','E66.09 — Other obesity due to excess calories','E03.9 — Hypothyroidism (ruling out endocrine cause)'],
+    c:1,
+    r:'E66.01 = Morbid (severe) obesity due to excess calories. The documentation gives both the severity (morbid, BMI 41.8) and the etiology (excess calories). E66.9 wastes the documented etiology. E66.09 is "other obesity" — not morbid. We do NOT code hypothyroidism; the note rules it out.',
+    bigLesson:'When the provider documents an etiology, you must use it. "Due to excess calories" is a documented etiology subterm — never default to unspecified when specificity is given.'
+  },
+  {
+    title:'Trap 5: Two related conditions — which one is the main diagnosis?',
+    trap:'Documentation contains more than one condition. Students often code the wrong one as the primary.',
+    note:'CHIEF COMPLAINT: Painful, swollen right knee.\nHISTORY: Patient has gout. This is a known recurrent problem.\nASSESSMENT: Acute gouty arthritis, right knee.',
+    analysis:[
+      {q:'The chief complaint mentions "swollen right knee." Should you code joint swelling?',a:'No — a confirmed diagnosis (acute gouty arthritis) is documented. Never code symptoms when a definitive diagnosis is confirmed.'},
+      {q:'What is the main term for gout coding?',a:'Gout — the condition. "Acute" and "right knee" are subterms/specifiers.'},
+      {q:'The word "arthritis" appears in the Assessment. Should you look up "arthritis" as the main term?',a:'No — "gouty arthritis" as a whole maps under Gout in the ICD-10-CM index. When a disease process (Gout) causes arthritis, you look up the underlying disease.'},
+      {q:'What does "acute" tell you about code selection?',a:'Acute gouty arthritis is a distinct subtype from chronic or intercritical gout. Document-specified acuity guides you to the correct subcategory.'},
+    ],
+    q:'Which code path is most appropriate for "acute gouty arthritis, right knee"?',
+    opts:['M25.361 — Stiffness of right knee (symptom)','M10.061 — Idiopathic gout, right knee (acute gout)','M10.9 — Gout, unspecified','M79.89 — Other specified musculoskeletal disorders'],
+    c:1,
+    r:'Acute gouty arthritis of the right knee maps to M10.061. Gout is the main term → idiopathic (primary) gout → right knee. M10.9 discards the documented location. Symptom codes are never used when a confirmed diagnosis is present.',
+    bigLesson:'When a disease process (Gout) causes a symptom (joint swelling/arthritis), code the disease — not the symptom. The confirmed diagnosis in the Assessment always overrides symptoms in the complaint or history.'
+  },
+  {
+    title:'Trap 6: Documentation supports a BROADER code — not the narrow one',
+    trap:'Students assume "more specific = better." Sometimes the documentation only supports a broader code.',
+    note:'ASSESSMENT: Patient presents with a urinary tract infection. Urine culture positive for E. coli. No fever, no costovertebral angle tenderness. Infection appears limited to the lower urinary tract. Diagnosis: Urinary tract infection — site not otherwise specified.',
+    analysis:[
+      {q:'The culture is positive. Does that mean you code cystitis (bladder-specific)?',a:'No — the provider documented "urinary tract infection, site not otherwise specified" and did NOT specify the bladder. Never assume an anatomic site beyond what is documented.'},
+      {q:'"Site not otherwise specified" — what does that tell you?',a:'The provider could not or did not confirm the anatomic location beyond the lower urinary tract. This guides you to a non-site-specific UTI code.'},
+      {q:'Why is coding N30.00 (acute cystitis) wrong here?',a:'Because cystitis is bladder-specific. The provider said "site NOS" — meaning the bladder was NOT confirmed. Coding cystitis would assume more than what was documented.'},
+      {q:'Which code captures a UTI when the site is not specified?',a:'N39.0 — Urinary tract infection, site not specified. This code exists exactly for this scenario.'},
+    ],
+    q:'Which code is correct when the provider documents "urinary tract infection, site not specified"?',
+    opts:['N30.00 — Acute cystitis without hematuria (assuming bladder)','N39.0 — Urinary tract infection, site not specified','N28.84 — Pyelitis (upper UTI)','R82.71 — Bacteriuria (lab finding code)'],
+    c:1,
+    r:'N39.0 is specifically designed for UTI when the site is not documented. N30.00 requires confirmation of bladder involvement — the provider did NOT confirm this. Bacteriuria (R82.71) is a lab finding, not the diagnosis. N28.84 is an upper UTI — contradicted by "lower urinary tract" in the note.',
+    bigLesson:'You cannot code to a higher level of specificity than the documentation supports. If the site is not specified, use the "site not specified" code — even when a lab result suggests a site.'
+  },
+];
+
+(()=>{
+  const el=document.getElementById('s7-content');
+  const answered={};
+  el.innerHTML=s7cases.map((c,i)=>`
+    <div class="card" style="margin-bottom:22px;border-top:5px solid var(--violet)">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="badge b-vi">${c.title}</span>
+        <span class="badge b-ye">⚠️ Trap</span>
+      </div>
+      <div class="al al-or"><strong>🎭 The Trap:</strong> ${c.trap}</div>
+      <div class="note-box" style="border-left-color:var(--violet)">
+        <div class="note-label">Clinical Documentation</div>
+        ${c.note.replace(/\n/g,'<br>')}
+      </div>
+      <div class="ct" style="color:var(--violet);margin-top:12px">🔍 Analyze the Documentation</div>
+      ${c.analysis.map((a,ai)=>`
+        <div class="acc" style="margin-bottom:6px">
+          <div class="ah" onclick="tAcc(this)"><span>${ai+1}. ${a.q}</span><span class="aa">▼</span></div>
+          <div class="ab">${a.a}</div>
+        </div>`).join('')}
+      <p style="font-size:13px;font-weight:600;margin:14px 0 10px">${c.q}</p>
+      ${c.opts.map((o,oi)=>`<button class="qo" id="s7q${i}-${oi}" onclick="ansS7(${i},${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}
+      <div class="fb" id="s7fb${i}"></div>
+      <div class="rv" id="s7rv${i}">
+        <div class="hl hl-gr"><strong>✅ Rationale:</strong> ${c.r}</div>
+        <div class="hl hl-vi" style="margin-top:8px"><strong>💡 Big Lesson:</strong> ${c.bigLesson}</div>
+      </div>
+    </div>`).join('');
+  window.ansS7=function(qi,chosen){
+    if(answered[qi])return;answered[qi]=true;
+    const c=s7cases[qi];
+    document.querySelectorAll(`[id^="s7q${qi}-"]`).forEach(b=>b.disabled=true);
+    const fb=document.getElementById('s7fb'+qi);
+    if(chosen===c.c){document.getElementById(`s7q${qi}-${chosen}`).classList.add('cor');fb.className='fb fb-c';fb.innerHTML='✅ <strong>Correct!</strong> Excellent analytical thinking.';addScore(8);}
+    else{document.getElementById(`s7q${qi}-${chosen}`).classList.add('wrg');document.getElementById(`s7q${qi}-${c.c}`).classList.add('cor');fb.className='fb fb-w';fb.innerHTML='❌ <strong>Not quite.</strong> Study the rationale below carefully.';}
+    setTimeout(()=>document.getElementById('s7rv'+qi).classList.add('open'),300);
+  };
+})();
+
+// ─────────────────────────────────────────
+// SECTION 8 — GUIDED WALKTHROUGH
+// ─────────────────────────────────────────
+const walkthroughs=[
+  {
+    id:'s8-c1',
+    title:'Case A: Distal Radius Fracture',
+    badge:'Musculoskeletal',
+    note:'S/O: 52-year-old female fell on outstretched right hand. X-ray confirms displaced fracture of the distal radius. No skin break. First time treatment today.\nA: Displaced fracture, right distal radius, closed, initial encounter.',
+    steps:[
+      {label:'Step 1: What is the diagnosis family?',detail:'Fracture — this is the disease family/category. All fractures in ICD-10-CM are organized by site and type.',reveal:'Fracture → musculoskeletal chapter. The main term in the index is "Fracture, traumatic" (not just "Fracture").'},
+      {label:'Step 2: What is the main term?',detail:'Think about the condition. What is wrong?',reveal:'"Fracture, traumatic" — Note that in ICD-10-CM, you look up "Fracture, traumatic" for injury fractures, not just "Fracture." This is a common indexing trap.'},
+      {label:'Step 3: What are the key subterms?',detail:'What specific details in the note narrow the code?',reveal:'(1) Right — laterality. (2) Distal radius — anatomic site. (3) Displaced — type of fracture. (4) Closed — no skin break. All four details guide the code.'},
+      {label:'Step 4: What does the 7th character mean here?',detail:'The note says "initial encounter." How does this affect the code?',reveal:'Fracture codes require a 7th character for encounter type. A = Initial encounter for closed fracture. D = Subsequent encounter. S = Sequela. Today\'s visit is the FIRST treatment → A.'},
+      {label:'Step 5: What is the correct code family?',detail:'Which category captures displaced fracture of right distal radius?',reveal:'S52.50 — Fracture of lower end of radius. S52.501A = Unspecified fracture of lower end of right radius, initial encounter. More specific: S52.509A or with displacement noted. The exact subcategory depends on the precise radial fracture pattern.'},
+      {label:'Step 6: What would be the wrong path and why?',detail:'What are the common errors students make here?',reveal:'(1) Using M84.3 (stress fracture) — this is traumatic, not a stress fracture. (2) Forgetting the 7th character. (3) Coding the radius without specifying displacement or laterality when documentation provides it.'},
+    ],
+    q:'Which 7th character applies to the INITIAL treatment visit for this closed fracture?',
+    opts:['D — Subsequent encounter for fracture with routine healing','S — Sequela','A — Initial encounter for closed fracture','G — Subsequent encounter for fracture with delayed healing'],
+    c:2,
+    r:'The 7th character "A" is for the initial encounter for a closed fracture — meaning the first time the patient receives definitive treatment. Today is that first visit. "D" is for follow-up visits after initial treatment. "S" is for complications/late effects.',
+  },
+  {
+    id:'s8-c2',
+    title:'Case B: Obesity Coding',
+    badge:'Endocrine',
+    note:'A: BMI today 38.6. Patient has Class II obesity. No endocrine cause identified. Patient counseled on caloric restriction. Diagnosis: Class II obesity due to excess calories.',
+    steps:[
+      {label:'Step 1: What is the diagnosis family?',detail:'What broad disease category is obesity part of?',reveal:'Obesity falls in Chapter 4 — Endocrine, nutritional and metabolic diseases. Main term in index: Obesity.'},
+      {label:'Step 2: What type of obesity is documented?',detail:'The note gives you very specific information. What are the key subterms?',reveal:'"Class II" and "due to excess calories" — both are searchable subterms. Class II obesity (BMI 35.0–39.9) maps to E66.01 when the cause is excess calories.'},
+      {label:'Step 3: Does BMI need to be coded separately?',detail:'The note documents BMI 38.6. Is there an additional code needed?',reveal:'Yes — ICD-10-CM guidelines indicate that BMI may be coded additionally using Z68.xx codes. Z68.38 would capture BMI 38.0–38.9. This is an additional code, not the primary diagnosis.'},
+      {label:'Step 4: Why NOT code E66.9 (obesity unspecified)?',detail:'The temptation is to use the simplest code. Why is that wrong?',reveal:'E66.9 wastes all the documented specificity. The provider gave you the type (Class II), the etiology (excess calories), and the BMI. Each of these guides a more specific code. Use E66.01 + Z68.38.'},
+      {label:'Step 5: What is ruled out by "no endocrine cause"?',detail:'This phrase eliminates certain codes. Which ones?',reveal:'Obesity due to endocrine disorders (like hypothyroidism causing weight gain) would use different codes. The note rules out this pathway, confirming E66.01 as the right category.'},
+      {label:'Step 6: Final check — does the documentation support the specificity chosen?',detail:'Review: does every character of your code have a corresponding documentation element?',reveal:'E66.01: E66 = obesity (documented). .01 = morbid/severe due to excess calories (documented: Class II, excess calories). Yes — fully supported.'},
+    ],
+    q:'A provider documents "Class II obesity due to excess calories, BMI 38.6." Which code set is correct?',
+    opts:['E66.9, Z68.38 — Obesity unspecified + BMI code','E66.01, Z68.38 — Morbid obesity due to excess calories + BMI 38.6','E66.09, Z68.38 — Other obesity + BMI code','E03.9 — Hypothyroidism (wrong family entirely)'],
+    c:1,
+    r:'E66.01 captures Class II (morbid/severe) obesity due to excess calories. Z68.38 captures BMI 38.0–38.9. Both pieces of information are documented and should be coded. E66.09 is "other obesity" — not morbid. E66.9 discards specificity.',
+  },
+  {
+    id:'s8-c3',
+    title:'Case C: Diabetes with Chronic Kidney Disease',
+    badge:'Endocrine + Genitourinary',
+    note:'ESTABLISHED PATIENT: Type 2 diabetes mellitus. Labs today confirm GFR 42 (Stage 3 CKD). Diabetes appears to be contributing to kidney involvement. No dialysis. A: Type 2 diabetes mellitus with diabetic chronic kidney disease, Stage 3.',
+    steps:[
+      {label:'Step 1: What is the primary diagnosis?',detail:'There are two conditions. Which is the primary code?',reveal:'Diabetes with a complication — the diabetes code captures the complication using a combination code. E11.22 = Type 2 DM with diabetic chronic kidney disease, Stage 3 (or unspecified). The CKD stage is coded additionally.'},
+      {label:'Step 2: Is this Type 1 or Type 2?',detail:'Identify the type from the note.',reveal:'"Type 2 diabetes mellitus" is explicitly documented. E11 is the code family. Never assume type; always code what is documented.'},
+      {label:'Step 3: What complication is present?',detail:'The note says kidney involvement. What category does this fall under?',reveal:'Diabetic chronic kidney disease = diabetic nephropathy/renal complication. This is a subcategory under E11 — E11.22 (Type 2 DM with diabetic chronic kidney disease, Stage 3 or 1-2) or E11.21 for Stage 1–2.'},
+      {label:'Step 4: Do you also code the CKD separately?',detail:'ICD-10-CM guidelines often require an additional code for CKD stage.',reveal:'Yes — ICD-10-CM instructs you to use an additional code from N18.x for the stage. GFR 42 = Stage 3 CKD → N18.3. This secondary code adds the CKD stage detail.'},
+      {label:'Step 5: Why NOT code the CKD as the primary diagnosis?',detail:'Should N18.3 be listed first?',reveal:'Diabetes is the underlying cause of the kidney disease. The diabetic complication code (E11.22) is sequenced first. N18.3 is additional/secondary in this case.'},
+      {label:'Step 6: What should never be coded here?',detail:'What are the traps?',reveal:'(1) E11.9 (without complications) — CKD IS a complication. (2) N18.3 alone without the diabetes code — the relationship between DM and CKD must be captured. (3) E10.22 — Type 1 DM code, wrong type.'},
+    ],
+    q:'What is the correct PRIMARY code for "Type 2 diabetes with diabetic CKD, Stage 3"?',
+    opts:['N18.3 — CKD Stage 3 (sequenced first)','E11.9 — Type 2 DM without complications','E11.22 — Type 2 DM with diabetic CKD, Stage 3 (with N18.3 additional)','E10.22 — Type 1 DM with diabetic CKD'],
+    c:2,
+    r:'E11.22 is sequenced first as the primary diagnosis (diabetes with its complication). N18.3 is an additional code for the CKD stage. E11.9 ignores the documented complication. E10.22 is the wrong diabetes type. CKD code N18.3 is NOT sequenced first when diabetic nephropathy is documented.',
+  },
+  {
+    id:'s8-c4',
+    title:'Case D: Conjunctivitis — Allergic or Infectious?',
+    badge:'Diseases of the Eye',
+    note:'CC: Red, watery eyes. Itching. Started when pollen season began. No purulent discharge. Both eyes affected. Patient has history of seasonal allergies.\nA: Acute atopic conjunctivitis, bilateral.',
+    steps:[
+      {label:'Step 1: What is the main term?',detail:'Identify the condition being coded.',reveal:'Conjunctivitis — the condition. "Acute atopic" and "bilateral" are subterms/specifiers.'},
+      {label:'Step 2: What type of conjunctivitis is documented?',detail:'The note gives strong clinical clues. What type is this?',reveal:'"Acute atopic" — atopic means allergic/immune-mediated. "Started when pollen season began" and "history of seasonal allergies" support this. No purulent discharge rules out bacterial/mucopurulent conjunctivitis (H10.0).'},
+      {label:'Step 3: What clue rules out bacterial conjunctivitis?',detail:'What specific finding in the note eliminates H10.0?',reveal:'"No purulent discharge" — bacterial conjunctivitis produces mucopurulent (pus-containing) discharge. The absence of purulent discharge eliminates H10.0.'},
+      {label:'Step 4: How does "bilateral" affect the code?',detail:'Both eyes are documented. How does laterality work here?',reveal:'ICD-10-CM has specific codes for right eye (.1), left eye (.2), and bilateral (.13 for bilateral atopic). "Both eyes affected" → bilateral code.'},
+      {label:'Step 5: What is wrong with coding H10.9?',detail:'Why is "Conjunctivitis, unspecified" incorrect?',reveal:'H10.9 discards all documented specificity: atopic type and bilateral laterality are both documented and should be coded. Never use unspecified when specific information is available.'},
+      {label:'Step 6: Final selection',detail:'What is the correct code?',reveal:'H10.13 — Acute atopic conjunctivitis, bilateral. All three elements are documented: acute (onset), atopic (allergic type), bilateral (both eyes).'},
+    ],
+    q:'What is the correct code for "acute atopic conjunctivitis, bilateral"?',
+    opts:['H10.9 — Conjunctivitis, unspecified','H10.013 — Mucopurulent conjunctivitis, bilateral','H10.13 — Acute atopic conjunctivitis, bilateral','H10.31 — Unspecified acute conjunctivitis, right eye'],
+    c:2,
+    r:'H10.13 captures all three documented elements: acute, atopic, bilateral. H10.9 (unspecified) discards documented specificity. H10.013 (mucopurulent) requires purulent discharge — specifically ruled out in the note. H10.31 is only the right eye — documentation says bilateral.',
+  },
+];
+
+walkthroughs.forEach(wt=>{
+  const el=document.getElementById('sub-'+wt.id);
+  const answered={};
+  el.innerHTML=`
+    <div class="al al-te" style="margin-bottom:14px">🧑‍🏫 <span><strong>Guided Mode:</strong> Work through each step. Click "Reveal Answer" only after you've thought through the question. Then answer the final question.</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="badge b-bl">${wt.title}</span>
+      <span class="badge b-te">${wt.badge}</span>
+    </div>
+    <div class="note-box"><div class="note-label">Clinical Documentation</div>${wt.note.replace(/\n/g,'<br>')}</div>
+    ${wt.steps.map((s,si)=>`
+      <div class="walk-step">
+        <div class="step-wrap">
+          <div class="step-num">${si+1}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px">${s.label}</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">${s.detail}</div>
+            <button class="why-btn" onclick="revealWalkStep(this,'wans-${wt.id}-${si}')">Reveal Answer ▾</button>
+            <div class="rv" id="wans-${wt.id}-${si}" style="margin-top:8px"><div class="hl hl-gr">${s.reveal}</div></div>
+          </div>
+        </div>
+      </div>`).join('')}
+    <div class="card" style="margin-top:18px;border-top:4px solid var(--blue)">
+      <p style="font-size:13px;font-weight:700;margin-bottom:12px">🎯 Final Question</p>
+      <p style="font-size:13px;margin-bottom:10px">${wt.q}</p>
+      ${wt.opts.map((o,oi)=>`<button class="qo" id="wt${wt.id}q-${oi}" onclick="ansWT('${wt.id}',${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}
+      <div class="fb" id="wt${wt.id}fb"></div>
+    </div>`;
+  window['ansWT']=window['ansWT']||function(wtid,chosen){
+    if(answered[wtid])return;answered[wtid]=true;
+    const wt2=walkthroughs.find(x=>x.id===wtid);
+    document.querySelectorAll(`[id^="wt${wtid}q-"]`).forEach(b=>b.disabled=true);
+    const fb=document.getElementById('wt'+wtid+'fb');
+    if(chosen===wt2.c){document.getElementById(`wt${wtid}q-${chosen}`).classList.add('cor');fb.className='fb fb-c';fb.innerHTML='✅ <strong>Correct!</strong> '+wt2.r;addScore(8);}
+    else{document.getElementById(`wt${wtid}q-${chosen}`).classList.add('wrg');document.getElementById(`wt${wtid}q-${wt2.c}`).classList.add('cor');fb.className='fb fb-w';fb.innerHTML='❌ <strong>Not quite.</strong> '+wt2.r;}
+  };
+});
+window.revealWalkStep=function(btn,id){document.getElementById(id).classList.toggle('open');};
+
+// ─────────────────────────────────────────
+// SECTION 9 — PRACTICE CHALLENGES (30)
+// ─────────────────────────────────────────
+const s9qs=[
+  {type:'Main Term',q:'A provider documents "acute exacerbation of chronic obstructive bronchitis." What is the MAIN TERM to look up in the ICD-10-CM index?',o:['Acute','Exacerbation','Bronchitis','Chronic'],c:2,r:'"Bronchitis" is the condition. "Acute exacerbation" and "chronic obstructive" are subterms that narrow the code. Always start with the condition name.'},
+  {type:'Code Structure',q:'Which characters of an ICD-10-CM code ALWAYS identify the category?',o:['Characters 4 through 6','The first 3 characters','The first character only','Characters 3 through 5'],c:1,r:'The first 3 characters ALWAYS identify the ICD-10-CM category. This is a foundational rule.'},
+  {type:'Subterm',q:'Provider writes: "allergic rhinitis due to house dust mites." What subterm would you follow under RHINITIS in the index?',o:['Acute','Allergic, due to animal (cat/dog) hair and dander','Allergic, due to food','Allergic, perennial — then check dust mite specificity'],c:3,r:'House dust mite rhinitis is a perennial (year-round) allergen. In the ICD-10-CM index under Rhinitis → allergic → perennial → check for dust mite. Never assume "animal" — dust mites are not animals in the coding sense.'},
+  {type:'Branch Logic',q:'A patient has Type 2 diabetes and cataracts. Which code family would capture "Type 2 DM with diabetic cataract"?',o:['E11.3 — T2DM with ophthalmic complications (includes cataract)','E11.4 — T2DM with neurological complications','H26.9 — Cataract, unspecified (code cataract separately)','E11.9 — T2DM without complications (cataracts are not a DM complication)'],c:0,r:'Diabetic cataracts are an ophthalmic (eye) complication of diabetes → E11.3x. Do not code the cataract separately when a combination code captures the relationship. Neurological complications (E11.4) are for neuropathy, not eye problems.'},
+  {type:'Tricky Wording',q:'A provider documents "water on the knee." What condition is most likely being described?',o:['Gout of the knee','Knee effusion (fluid in the joint)','Knee fracture','Bursitis'],c:1,r:'"Water on the knee" is a lay term for joint effusion (accumulation of fluid in the knee joint). Main term: Effusion → joint → knee → M25.361.'},
+  {type:'Too Broad / Too Narrow',q:'The note says "chronic sinusitis." The coder selects J32.9 (Chronic sinusitis, unspecified). Under what circumstance would this be CORRECT?',o:['Never — always code the most specific sinus','Only if the specific sinus is NOT documented anywhere in the note','Always — it covers all chronic sinusitis','Only if the patient has had the condition for more than one year'],c:1,r:'J32.9 is appropriate when the provider documents "chronic sinusitis" without specifying which sinus is affected. If the note says "maxillary" or "frontal" etc., use the specific code. "Unspecified" is not wrong — it is REQUIRED when documentation lacks specificity.'},
+  {type:'Branch Logic',q:'Provider documents "allergic contact dermatitis due to latex gloves." Which family applies?',o:['L23 — Allergic contact dermatitis (L23.5 for rubber/latex)','L24 — Irritant contact dermatitis','L20 — Atopic dermatitis','L25 — Unspecified contact dermatitis'],c:0,r:'Latex triggers an IMMUNE/ALLERGIC reaction → allergic contact dermatitis → L23. L23.5 specifically captures rubber/latex. Irritant contact (L24) is a direct chemical injury mechanism, not immune-mediated.'},
+  {type:'Main Term',q:'Provider writes "bacterial pneumonia." What is the correct main term to search in the ICD-10-CM index?',o:['Bacterial','Pneumonia','Infection','Lung'],c:1,r:'"Pneumonia" is the main term (the condition). "Bacterial" is a subterm that modifies it. Never look up an adjective as the main term.'},
+  {type:'Provider Note',q:'A note says "Patient has uncontrolled Type 2 diabetes with hyperglycemia." Which code captures this best?',o:['E11.9 — T2DM without complications','E11.65 — T2DM with hyperglycemia','E11.649 — T2DM with hypoglycemia, unspecified (wrong — confusion)','R73.09 — Hyperglycemia, unspecified'],c:1,r:'Uncontrolled diabetes with hyperglycemia = E11.65. "Uncontrolled" indicates the glucose is not at goal — E11.65 specifically captures T2DM with hyperglycemia. E11.9 ignores the documented hyperglycemia.'},
+  {type:'7th Character',q:'A patient who had a distal radius fracture treated 3 weeks ago returns for a cast check. What 7th character applies?',o:['A — Initial encounter for closed fracture','G — Subsequent encounter with delayed healing','D — Subsequent encounter for fracture with routine healing','S — Sequela'],c:2,r:'Subsequent visit for routine healing = "D." The patient already received initial treatment; this is a follow-up. "A" was for the first treatment visit. "G" requires documentation of delayed healing, which is not noted here.'},
+  {type:'Subterm',q:'Under the main term "Otitis," which subterm differentiates middle ear from outer ear infection?',o:['"Acute" vs "chronic"','Media (middle ear) vs externa (outer ear)','Bilateral vs unilateral','Suppurative vs nonsuppurative'],c:1,r:'"Media" = middle ear. "Externa" = outer ear canal. These are location subterms under the main term Otitis that lead to completely different code families (H65/H66 vs H60/H62).'},
+  {type:'Code Structure',q:'Code N30.01 has 5 characters. What do characters 4 and 5 add compared to the category N30?',o:['They change the disease family','They add acuity (acute vs chronic) and hematuria detail (with vs without blood)','They indicate right vs left side','They indicate initial vs subsequent encounter'],c:1,r:'N30 = cystitis (category). N30.0 adds "acute." N30.01 adds "with hematuria." Each character after the first 3 adds clinical specificity about the condition.'},
+  {type:'Table Navigation',q:'A provider documents "mild persistent asthma, currently stable." Which code is MOST accurate?',o:['J45.20 — Mild intermittent asthma, uncomplicated','J45.30 — Mild persistent asthma, uncomplicated','J45.31 — Mild persistent asthma with acute exacerbation','J45.32 — Mild persistent asthma with status asthmaticus'],c:1,r:'"Currently stable" = no exacerbation. "Mild persistent" = J45.3. "Stable/uncomplicated" = J45.30. J45.31 requires documentation of an active exacerbation, which is not present here.'},
+  {type:'Tricky Wording',q:'A note says "patient has sugar diabetes." What should the coder do?',o:['Code R73.09 — Hyperglycemia (patient\'s exact words)','Recognize "sugar diabetes" as lay terminology for diabetes mellitus and look up Diabetes in the index','Leave uncoded — lay terms cannot be coded','Code E11.9 automatically without further review'],c:1,r:'"Sugar diabetes" is a lay/colloquial term for diabetes mellitus. You translate the clinical meaning and look up Diabetes. The type (1 or 2) and complications must still be determined from the full note context.'},
+  {type:'Branch Logic',q:'Provider documents "anemia due to chronic kidney disease." Which code would be primary?',o:['D63.1 — Anemia in chronic kidney disease (additional code)','N18.9 — CKD, unspecified (primary)','D64.9 — Anemia, unspecified','Both N18.x and D63.1 — sequence per guidelines (CKD first, then anemia)'],c:3,r:'When anemia is due to CKD, both the CKD (N18.x) and the anemia (D63.1) are coded. ICD-10-CM sequencing guidelines indicate the underlying condition (CKD) is typically sequenced first when applicable. D63.1 is an etiology/manifestation "additional code" flag.'},
+  {type:'Main Term',q:'Provider documents "hemorrhagic gastritis due to aspirin use." What is the MAIN TERM?',o:['Hemorrhagic','Aspirin','Gastritis','Aspirin toxicity'],c:2,r:'"Gastritis" is the condition being coded. "Hemorrhagic" is a subterm describing the type. "Due to aspirin" is an additional subterm for etiology. The drug (aspirin) may require a separate adverse effect code.'},
+  {type:'Too Broad',q:'Which of the following represents a CATEGORY-level code (first 3 characters = the category), not yet a reportable specific code?',o:['H10.13 — Acute atopic conjunctivitis, bilateral','N39.0 — Urinary tract infection, site not specified','J45 — Asthma (3 characters only)','E11.65 — T2DM with hyperglycemia'],c:2,r:'J45 is the 3-character category for asthma. It represents the disease family. In most cases, additional characters are required for specificity. H10.13, N39.0, and E11.65 are all valid reportable codes with appropriate specificity.'},
+  {type:'Provider Note',q:'A note says "patient with known hypertension and Type 2 diabetes." No complications documented for either. Which code(s) are used?',o:['I10 only — hypertension subsumes diabetes','E11.9 only — diabetes is more important','I10 and E11.9 — both are coded separately when present without direct linkage','I13.10 — Hypertensive heart and kidney disease (assumption)'],c:2,r:'Hypertension (I10) and diabetes (E11.9) are coded separately when they are both present without documented causal linkage or organ complications. Never combine them into I13 without documentation of hypertensive-related organ complications.'},
+  {type:'Subterm Hunt',q:'Under the main term "Dermatitis," which subterm would you follow for "diaper rash"?',o:['Contact, irritant','Atopic','Diaper L22','Seborrheic'],c:2,r:'Diaper rash has its own code: L22 — Diaper dermatitis. In the ICD-10-CM index, you can look up "Diaper rash" directly or follow Dermatitis → diaper → L22. It is not atopic and not the same as contact/irritant dermatitis.'},
+  {type:'Tricky Wording',q:'Provider documents "patient is a brittle diabetic." What type of diabetes does "brittle" typically describe?',o:['Type 2 diabetes with poor compliance','Type 1 diabetes with difficult glycemic control (E10.649 or similar)','Pre-diabetes (prediabetes)','Gestational diabetes'],c:1,r:'"Brittle diabetes" historically describes Type 1 DM with erratic, unstable blood glucose that is difficult to control. Look up Diabetes → brittle in the index, which leads to Type 1 DM. Always verify with the full clinical note.'},
+  {type:'Branch Logic',q:'A patient with no prior fracture history trips and fractures her wrist. The provider writes "traumatic." Which type of fracture code family applies?',o:['M84.3 — Stress fracture (repeated small force)','M84.4 — Pathological fracture (bone disease)','S62.x — Traumatic fracture (injury-related)','M80.x — Osteoporosis with current fracture'],c:2,r:'A traumatic fracture from a fall/trip is coded from the injury chapter (S codes). "Traumatic" means a single external force caused the break. Stress fractures (M84.3) are from repetitive force. Pathological fractures (M84.4) occur in diseased bone. Osteoporosis fractures require osteoporosis diagnosis.'},
+  {type:'Code Structure',q:'An ICD-10-CM code requires a 7th character "A" for initial encounter. The code has only 5 characters before the 7th character position. What must be inserted?',o:['Nothing — the code is invalid','An additional digit from the provider','A placeholder "X" to fill the empty position','The letter "Z" as a default'],c:2,r:'When a code requires a 7th character but has fewer than 6 characters before it, a placeholder "X" must be inserted in the empty position(s). Without it, the code is invalid and not reportable.'},
+  {type:'Provider Note',q:'Provider writes: "Patient was stung by a bee and developed hives." What should be coded?',o:['L50.0 — Allergic urticaria only (hives)','The bee sting injury only (T63.441A)','Both the hives (L50.0) and the cause (bee sting T63.441A) with additional code for initial encounter','R21 — Rash only'],c:2,r:'Both the toxic effect of the bee sting (T63.441A — toxic effect of bee venom, initial encounter) and the resulting hives (L50.0 — allergic urticaria) should be coded. Coding guidelines require coding both the manifestation and the cause when documented.'},
+  {type:'Tricky Wording',q:'Provider documents "walking pneumonia." What is the clinical equivalent in ICD-10-CM?',o:['J18.9 — Pneumonia, unspecified organism','J15.7 — Pneumonia due to Mycoplasma pneumoniae','J20.0 — Acute bronchitis due to Mycoplasma','R06.09 — Other forms of dyspnea'],c:1,r:'"Walking pneumonia" is a lay term typically used for Mycoplasma pneumoniae (atypical) pneumonia — a mild pneumonia where the patient is still ambulatory. Main term: Pneumonia → Mycoplasma → J15.7.'},
+  {type:'Main Term',q:'Provider documents "recurrent urinary tract infection." What is the main term?',o:['Recurrent','Urinary','Infection, urinary tract','Tract'],c:2,r:'In ICD-10-CM, the entry "Infection, urinary tract" is the main term/subterm combination. Look up Infection → urinary tract → N39.0. "Recurrent" may modify the clinical picture but the main entry is under Infection.'},
+  {type:'Branch Logic',q:'What is the key difference between E11.40 and E11.42 in the diabetes tree?',o:['E11.40 is Type 1, E11.42 is Type 2','E11.40 is diabetic neuropathy unspecified; E11.42 is specifically diabetic polyneuropathy (peripheral)','E11.40 covers all complications; E11.42 is only for foot neuropathy','E11.40 requires dialysis; E11.42 does not'],c:1,r:'E11.40 = T2DM with unspecified diabetic neuropathy. E11.42 = T2DM with diabetic polyneuropathy (peripheral neuropathy). When "peripheral neuropathy" is specifically documented, use E11.42, not the unspecified E11.40.'},
+  {type:'Subterm',q:'Under the main term "Conjunctivitis" in the ICD-10-CM index, which subterm distinguishes allergic from infectious types?',o:['Acute vs chronic','Unilateral vs bilateral','Atopic/acute (allergic) vs mucopurulent (bacterial/infectious) vs acute unspecified','Right vs left eye'],c:2,r:'The key subterms under Conjunctivitis distinguish: atopic (allergic), mucopurulent (pus-forming, bacterial), chemical, and unspecified. These lead to completely different code families (H10.0, H10.1, H10.2, etc.) and reflect the underlying mechanism.'},
+  {type:'Provider Note',q:'A note says: "Pt has chronic interstitial cystitis with painful bladder syndrome." Which code is most appropriate?',o:['N30.9 — Cystitis, unspecified','N30.10 — Interstitial cystitis (chronic) without hematuria','N30.11 — Interstitial cystitis (chronic) with hematuria','N39.0 — UTI, site not specified'],c:1,r:'Chronic interstitial cystitis without documented hematuria = N30.10. If hematuria (blood in urine) is documented, use N30.11. The note does not mention hematuria, so N30.10 is correct. N30.9 discards the specific type documented.'},
+  {type:'Code Structure',q:'How does adding a 7th character "S" change a fracture code?',o:['It indicates the patient is scheduled for surgery','It means the fracture is on the left side','It indicates sequela — a complication or late effect resulting from the fracture','It means the fracture is severe'],c:2,r:'"S" = Sequela. Used for complications and late effects that arise as a direct result of the fracture AFTER the fracture itself has healed. For example: malunion, deformity, or nerve damage following a healed fracture.'},
+  {type:'Tricky Wording',q:'A provider documents "patient has high blood pressure." Without additional documentation, which code applies?',o:['R03.0 — Elevated blood-pressure reading, without diagnosis of hypertension','I10 — Essential (primary) hypertension','I11.9 — Hypertensive heart disease without heart failure','I16.0 — Hypertensive urgency'],c:0,r:'Without a confirmed diagnosis of hypertension, "high blood pressure" reading maps to R03.0 (elevated reading, not diagnosed). If the provider had documented "hypertension," then I10 would apply. Documentation of a DIAGNOSIS vs a FINDING is critical.'},
+  {type:'Branch Logic',q:'A patient has mild intermittent asthma with NO current exacerbation. What is the correct code?',o:['J45.20 — Mild intermittent asthma, uncomplicated','J45.21 — Mild intermittent asthma with acute exacerbation','J45.22 — Mild intermittent asthma with status asthmaticus','J45.901 — Unspecified asthma with acute exacerbation'],c:0,r:'Mild intermittent asthma with no current exacerbation = J45.20 (uncomplicated). J45.21 requires an active exacerbation. "No current exacerbation" means uncomplicated is the appropriate subcategory.'},
+];
+
+let s9Score=0,s9Answered={};
+(()=>{
+  const el=document.getElementById('s9-content');
+  el.innerHTML=s9qs.map((q,i)=>`
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <span class="q-num">${i+1}</span>
+        <span class="badge b-vi">${q.type}</span>
+      </div>
+      <p style="font-size:13px;font-weight:600;margin-bottom:10px">${q.q}</p>
+      ${q.o.map((o,oi)=>`<button class="qo" id="s9q${i}-${oi}" onclick="ansS9(${i},${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}
+      <div class="fb" id="s9fb${i}"></div>
+    </div>`).join('');
+  window.ansS9=function(qi,chosen){
+    if(s9Answered[qi])return;s9Answered[qi]=true;
+    const q=s9qs[qi];
+    document.querySelectorAll(`[id^="s9q${qi}-"]`).forEach(b=>b.disabled=true);
+    const fb=document.getElementById('s9fb'+qi);
+    if(chosen===q.c){document.getElementById(`s9q${qi}-${chosen}`).classList.add('cor');fb.className='fb fb-c';fb.innerHTML='✅ <strong>Correct!</strong> '+q.r;s9Score++;addScore(5);}
+    else{document.getElementById(`s9q${qi}-${chosen}`).classList.add('wrg');document.getElementById(`s9q${qi}-${q.c}`).classList.add('cor');fb.className='fb fb-w';fb.innerHTML='❌ <strong>Not quite.</strong> '+q.r;}
+    const total=Object.keys(s9Answered).length;
+    document.getElementById('s9-score').textContent=`${s9Score}/${total}`;
+    document.getElementById('s9-bar').style.width=(total/s9qs.length*100)+'%';
+  };
+})();
+
+// ─────────────────────────────────────────
+// SECTION 10 — QUICK QUIZ (35)
+// ─────────────────────────────────────────
+const qzQs=[
+  {q:'Which characters of an ICD-10-CM code ALWAYS identify the CATEGORY?',o:['Characters 4 through 6','The first 3 characters','Characters 1 and 2 only','Characters 3 through 5'],c:1,r:'The first 3 characters ALWAYS identify the ICD-10-CM category. This is the most tested structural rule.'},
+  {q:'A provider documents "Type 2 DM with diabetic peripheral neuropathy." What is the PRIMARY main term to search in the ICD-10-CM index?',o:['Neuropathy','Peripheral','Diabetes','Type 2'],c:2,r:'Diabetes is the condition (the disease being managed). Peripheral neuropathy is a subterm/complication under Diabetes. Always start with the disease.'},
+  {q:'Code J45.31 represents "mild persistent asthma with acute exacerbation." What does the character "3" in position 4 tell you?',o:['The code is in Chapter 3','The asthma is mild persistent (severity/type classification)','The patient is 3 years old','This is the 3rd visit for this condition'],c:1,r:'In the asthma code family (J45), the 4th character identifies the severity/type: J45.2 = mild intermittent, J45.3 = mild persistent, J45.4 = moderate persistent, J45.5 = severe persistent. Each additional character adds specificity.'},
+  {q:'When is it CORRECT to code a symptom (like chest pain) even when a diagnosis is documented?',o:['Always — code all symptoms mentioned in the note','When the symptom is the primary reason for the visit regardless of diagnosis','Only when the symptom is "integral" or "routine" to the condition — then it is separately coded','Symptoms are NEVER coded when a confirmed diagnosis is documented (symptoms integral to a confirmed diagnosis are not separately coded)'],c:3,r:'Per ICD-10-CM guidelines, symptoms that are integral to (routinely associated with) a confirmed diagnosis are NOT coded separately. Code the confirmed diagnosis.'},
+  {q:'A patient has acute otitis media. The provider does NOT document which ear is affected. What should the coder do?',o:['Assume right ear based on the patient\'s complaint','Code unspecified side (H66.90 or similar "unspecified" code)','Query the provider before the visit ends','Leave the diagnosis uncoded'],c:1,r:'When laterality is not documented and you cannot determine it from the note, code the "unspecified" laterality option. Coders should not assume laterality beyond what is documented.'},
+  {q:'The note says "the patient\'s diabetes is currently uncontrolled." Which code BEST captures uncontrolled Type 2 diabetes with hyperglycemia?',o:['E11.9 — T2DM without complications','E11.649 — T2DM with hypoglycemia (wrong — confusion)','E11.65 — T2DM with hyperglycemia','R73.09 — Hyperglycemia, unspecified'],c:2,r:'E11.65 specifically captures Type 2 DM with hyperglycemia — "uncontrolled" in the context of elevated glucose maps here. E11.9 would be for controlled DM without complications.'},
+  {q:'What does "NOS" mean in ICD-10-CM terminology?',o:['Not otherwise stated — alternate phrasing','Not otherwise specified — used when detail is not given in documentation','Name of syndrome — a classification label','Necessary other symptoms — documentation requirement'],c:1,r:'NOS = Not Otherwise Specified. Used in code descriptions when the condition is documented but not further specified in the available documentation. It is a coding safety net, not a preferred choice.'},
+  {q:'Code H10.13 represents "Acute atopic conjunctivitis, bilateral." What does the "13" after H10 tell you?',o:['This is the 13th type of conjunctivitis','The patient is 13 years old','The code identifies the type (atopic/allergic) AND bilateral laterality','The code is from Chapter 13'],c:2,r:'In the conjunctivitis family (H10), the subcategory characters after the decimal specify the TYPE of conjunctivitis and the laterality (.11 = right, .12 = left, .13 = bilateral for atopic). Both type and laterality are captured by these characters.'},
+  {q:'A provider documents "hypertension" with "chronic kidney disease stage 4." According to ICD-10-CM guidelines, how is this coded?',o:['I10 alone — hypertension includes kidney disease','N18.4 alone — CKD stage 4 is the main concern','I12.9 — Hypertensive chronic kidney disease + N18.4 (CKD stage 4)','I13.10 — Hypertensive heart and kidney disease'],c:2,r:'ICD-10-CM assumes a causal relationship between hypertension and CKD. I12.x (Hypertensive CKD) + N18.4 (Stage 4 CKD) = correct code pair. I13 is for hypertension with BOTH heart disease AND kidney disease.'},
+  {q:'What is the MAIN TERM for "iron deficiency anemia"?',o:['Iron','Deficiency','Anemia','Iron deficiency'],c:2,r:'"Anemia" is the main term (the condition). "Iron deficiency" is a modifier subterm under Anemia in the ICD-10-CM index. Never look up an etiology or adjective as the main term.'},
+  {q:'A fracture code requires a 7th character but the code has only 5 characters before the 7th position. What must be inserted?',o:['The letter Z as a default filler','A number matching the fracture severity','A placeholder X in the empty position','The code is invalid and cannot be reported'],c:2,r:'A placeholder "X" must be inserted in empty character positions when a 7th character is required. Without it, the code is invalid. Example: T45.0X5A requires the X to hold position 6.'},
+  {q:'Provider documents "chronic maxillary sinusitis with recurrent acute episodes." What is the MAIN TERM?',o:['Chronic','Maxillary','Sinusitis','Recurrent'],c:2,r:'"Sinusitis" is the condition (main term). "Chronic," "maxillary," and "recurrent" are all subterm modifiers that guide you to the correct subcategory.'},
+  {q:'Which of the following is ALWAYS true about ICD-10-CM code categories?',o:['They always have 7 characters','They are always reportable as final codes','They are identified by the first 3 characters','They always require a 7th character for encounter type'],c:2,r:'The first 3 characters always identify the category. Categories don\'t always have 7 characters, aren\'t always reportable alone, and don\'t always need a 7th character. The 3-character category rule is universal.'},
+  {q:'The provider writes "asthma NOS." How should this be coded?',o:['J45.909 — Unspecified asthma, uncomplicated','J45.21 — Mild intermittent with exacerbation (default)','J45.20 — Mild intermittent, uncomplicated (most common type)','Cannot be coded — provider must specify type'],c:0,r:'J45.909 (Unspecified asthma, uncomplicated) is the correct choice when asthma type is not specified. You cannot assume a type. The provider must document the type; the coder selects "unspecified" when documentation is insufficient.'},
+  {q:'What is "status asthmaticus" and how does it differ from "acute exacerbation"?',o:['They are identical terms — same code','Status asthmaticus is a prolonged, severe attack not responding to treatment; exacerbation is a flare (more general)','Exacerbation is more severe than status asthmaticus','Status asthmaticus is used for pediatric patients only'],c:1,r:'Status asthmaticus = severe, prolonged attack unresponsive to standard treatment — a medical emergency. Acute exacerbation = a flare of asthma symptoms that may respond to rescue medication. These require different codes (e.g., J45.21 vs J45.22).'},
+  {q:'A note says "Contact dermatitis from poison ivy." Which type of contact dermatitis is this?',o:['L24 — Irritant contact (direct chemical damage)','L23.7 — Allergic contact dermatitis due to plants except food','L20 — Atopic dermatitis','L25.5 — Unspecified contact due to plants'],c:1,r:'Poison ivy causes an ALLERGIC immune reaction (Type IV hypersensitivity) — this is allergic contact dermatitis → L23.7. Irritant contact (L24) would be a direct chemical injury without an immune response, like from bleach.'},
+  {q:'A patient has Type 1 diabetes. The provider does not mention any complications. Which code applies?',o:['E11.9 — Type 2 DM without complications','E10.9 — Type 1 DM without complications','E13.9 — Other specified DM','E10.649 — Type 1 DM with hypoglycemia'],c:1,r:'Type 1 DM without documented complications = E10.9. Never use E11 for Type 1 diabetes. "Without complications" is the correct subcategory when no complications are documented.'},
+  {q:'A note says "bilateral otitis media with effusion, chronic." Which part of this phrase tells you the code will be in the H65 family (non-suppurative)?',o:['"Bilateral" (bilateral codes are always H65)','The word "effusion" — fluid without pus indicates nonsuppurative (H65)','The word "chronic" (chronic = always H65)','The absence of symptoms confirms H65'],c:1,r:'"Effusion" means fluid without pus — this is nonsuppurative (non-pus-forming), which maps to H65. H66 is for suppurative (pus-containing) otitis media. The nature of the discharge/fluid is the key differentiating factor.'},
+  {q:'Provider documents "left ankle fracture, initial treatment, closed." What is the correct 7th character?',o:['D — Subsequent encounter','S — Sequela','B — Initial encounter for open fracture','A — Initial encounter for closed fracture'],c:3,r:'"Initial treatment" + "closed" fracture = 7th character A. "D" is for follow-up visits. "B" is for initial treatment of OPEN (skin-breaking) fractures. "S" is for sequela/complications after healing.'},
+  {q:'What does "NEC" mean in ICD-10-CM?',o:['Not exactly classified','Not elsewhere classified — condition does not fit other specific categories','No exact code — condition is uncodeable','Next entry category — directs you to another index location'],c:1,r:'NEC = Not Elsewhere Classified. Used when a condition is known and documented but does not fit into any more specific code category available in the system. It is more specific than NOS.'},
+  {q:'A provider documents "acute and chronic cystitis." When both acute and chronic phases are documented, how should this be coded?',o:['Only chronic (it is longer-standing)','Only acute (it is the current concern)','N30.20 — Other chronic cystitis (includes acute-on-chronic)','Code both acute (N30.00) and chronic (N30.10) separately'],c:2,r:'When both acute and chronic forms coexist, ICD-10-CM typically has a combination code. N30.20 captures "other chronic cystitis" which includes combination patterns. Check the specific ICD-10-CM tabular for the best available code when both are documented.'},
+  {q:'The provider writes: "This patient\'s obesity appears to be related to her hypothyroidism." How should this be coded?',o:['E66.01 — Obesity, excess calories only','E03.9 and E66.09 — Hypothyroidism PLUS other obesity; the obesity here relates to endocrine cause','E66.9 — Obesity, unspecified, no additional codes needed','Only code the hypothyroidism (E03.9) — obesity is a symptom'],c:1,r:'When the provider links obesity to hypothyroidism (endocrine cause), code both: E03.9 (or specific hypothyroidism type) + E66.09 (other obesity due to excess calories — or specific code for endocrine-related obesity). These are two codeable conditions with a documented relationship.'},
+  {q:'Provider documents "Type 2 DM with diabetic macular edema, right eye, without retinopathy." What complication category does macular edema belong to in diabetes coding?',o:['Neurological complications (E11.4x)','Circulatory complications (E11.5x)','Ophthalmic/eye complications (E11.3x)','Kidney complications (E11.2x)'],c:2,r:'Macular edema is an EYE (ophthalmic) complication of diabetes → E11.3x. Ophthalmic complications include retinopathy, macular edema, cataracts, and other diabetic eye conditions.'},
+  {q:'What is the main term for "gastroesophageal reflux disease (GERD)"?',o:['Gastroesophageal','Reflux','Disease','Esophagitis'],c:1,r:'In ICD-10-CM, the index entry is found under "Reflux → gastroesophageal" leading to K21. "Gastroesophageal" is a modifier; "Reflux" is the primary index entry for GERD.'},
+  {q:'The provider writes "the patient\'s back pain is chronic and worsening." Under what circumstances would you code the back pain symptom (M54.5)?',o:['Always — always code symptoms in every note','Only when a confirmed spinal diagnosis has NOT been established','Only if the pain rating is above 7/10','Only during initial encounters'],c:1,r:'Symptom codes (like M54.5 for low back pain) are used when NO confirmed underlying diagnosis has been established. If the provider identifies a specific spinal condition (disc herniation, stenosis), code that instead.'},
+  {q:'A note says "patient with pre-existing asthma now has a respiratory infection." Which code is sequenced FIRST?',o:['J45.901 — Asthma (pre-existing)','J06.9 — Upper respiratory infection (current reason for visit)','The respiratory infection (current active condition) is typically first','R06.2 — Wheezing symptom code'],c:2,r:'Sequencing follows the reason for the visit and ICD-10-CM guidelines. When a patient with a chronic condition (asthma) presents with an acute condition (respiratory infection), the acute/current reason for the encounter is typically sequenced first per outpatient coding guidelines.'},
+  {q:'Provider documents "acute sinusitis, unspecified." Which code would apply?',o:['J32.9 — Chronic sinusitis, unspecified','J01.90 — Acute sinusitis, unspecified (without J01.x1 complications)','J00 — Acute nasopharyngitis (common cold)','J32.0 — Chronic maxillary sinusitis'],c:1,r:'J01.90 captures acute sinusitis when the specific sinus is not documented. J01.x0 = without recurrence; J01.x1 = with recurrence. J32.9 is CHRONIC — the note says ACUTE. J00 is the common cold, not sinusitis.'},
+  {q:'Which of the following is an example of a "combination code" in ICD-10-CM?',o:['J45.20 — Mild intermittent asthma (single condition, single code)','E11.42 — Type 2 DM with diabetic polyneuropathy (combines disease AND complication in one code)','N18.3 — CKD Stage 3 (single condition)','I10 — Essential hypertension (single condition)'],c:1,r:'E11.42 is a combination code — it captures both the underlying disease (Type 2 DM) AND its complication (diabetic polyneuropathy) in a single code. This is a defining feature of many ICD-10-CM diabetes codes.'},
+  {q:'A provider documents "chronic lymphocytic thyroiditis leading to hypothyroidism." What is this condition also called?',o:['Grave\'s disease','Hashimoto\'s thyroiditis','Toxic goiter','Subacute thyroiditis'],c:1,r:'"Chronic lymphocytic thyroiditis" is Hashimoto\'s thyroiditis — an autoimmune destruction of the thyroid leading to hypothyroidism. Code: E06.3 (Autoimmune thyroiditis). This is a classic "wording translation" — clinical description → ICD name.'},
+  {q:'What does "acute on chronic" mean in documentation, and why does it matter for coding?',o:['It means the condition is worsening and should be coded as acute only','It means both acute and chronic phases coexist — both may need to be coded or a combination code used','It means the condition started as acute and became chronic — use only the chronic code','It is not a codeable condition — provider must choose one'],c:1,r:'"Acute on chronic" means an acute flare occurring on top of an existing chronic condition. Both components may be coded, or a combination code may capture both. This documentation phrase should alert coders to look for combination codes or code both.'},
+  {q:'A provider documents "mild persistent asthma with acute exacerbation" — J45.31. The patient is admitted. Which sequencing rule applies?',o:['Code the exacerbation first always','Code the asthma type first (J45.31 — combination code captures both, no additional code needed)','Code the acute exacerbation separately then the asthma type','Always code J45.901 — unspecified for inpatient admissions'],c:1,r:'J45.31 is a combination code that captures both the asthma type (mild persistent) AND the exacerbation. No additional code is needed — the combination code handles both. This is a common exam question about combination code efficiency.'},
+  {q:'Provider writes "bilateral sensorineural hearing loss." What is the MAIN TERM in the ICD-10-CM index?',o:['Bilateral','Sensorineural','Loss, hearing','Hearing'],c:2,r:'In ICD-10-CM, look up "Loss, hearing" — hearing loss is indexed under "Loss" with "hearing" as the subterm, then "sensorineural" as a further subterm. This is a classic indexing structure where the type of loss (Loss) precedes the organ (hearing).'},
+  {q:'Under ICD-10-CM coding guidelines for outpatient coding, when should a "probable" or "suspected" diagnosis be coded?',o:['Always — code probable diagnoses as confirmed','Only for chronic conditions','Never for outpatient coding — code the sign/symptom instead','Only when two providers agree on the diagnosis'],c:2,r:'For outpatient (physician office, ambulatory) coding: do NOT code probable, suspected, or "rule out" diagnoses. Code the sign or symptom that brought the patient in. This is different from inpatient coding, where uncertain diagnoses may be coded.'},
+  {q:'A patient has anemia due to antineoplastic chemotherapy. Which coding sequence is required?',o:['Code the anemia only (D64.81)','Code cancer first, then chemotherapy adverse effect, then anemia','Code cancer, then anemia (D64.81), then the adverse effect of the chemotherapy drug (T45.1x5A)','Code anemia first because it is the immediate problem'],c:2,r:'Per guidelines for adverse effects: code the injury/condition first (anemia D64.81), then the adverse effect code identifying the drug (T45.1x5A for antineoplastic). The neoplasm is coded additionally. This sequencing order follows the adverse effect coding guidelines.'},
+  {q:'Final Question: What is the SINGLE MOST IMPORTANT rule to remember about ICD-10-CM code structure for exam purposes?',o:['The 7th character is always required','The first 3 characters always identify the category','Every code must have exactly 5 characters','The first character is always a letter'],c:1,r:'The first 3 characters ALWAYS identify the ICD-10-CM category. This is the foundational structural rule that underpins how all searching, organization, and selection works. Every exam will test this concept.'},
+];
+
+let qzScore=0,qzAnswered={};
+function renderQuiz(){
+  const el=document.getElementById('qz-content');
+  el.innerHTML=qzQs.map((q,i)=>`
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <span class="q-num">${i+1}</span>
+        <span style="font-weight:600;font-size:13px;line-height:1.5">${q.q}</span>
+      </div>
+      ${q.o.map((o,oi)=>`<button class="qo" id="qq${i}-${oi}" onclick="ansQZ(${i},${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}
+      <div class="fb" id="qzfb${i}"></div>
+    </div>`).join('');
+}
+function ansQZ(qi,chosen){
+  if(qzAnswered[qi])return;qzAnswered[qi]=true;
+  const q=qzQs[qi];
+  document.querySelectorAll(`[id^="qq${qi}-"]`).forEach(b=>b.disabled=true);
+  const fb=document.getElementById('qzfb'+qi);
+  if(chosen===q.c){document.getElementById(`qq${qi}-${chosen}`).classList.add('cor');fb.className='fb fb-c';fb.innerHTML='✅ <strong>Correct!</strong> '+q.r;qzScore++;addScore(5);}
+  else{document.getElementById(`qq${qi}-${chosen}`).classList.add('wrg');document.getElementById(`qq${qi}-${q.c}`).classList.add('cor');fb.className='fb fb-w';fb.innerHTML='❌ <strong>Not quite.</strong> '+q.r;}
+  const total=Object.keys(qzAnswered).length;
+  document.getElementById('qz-score').textContent=`${qzScore}/${total}`;
+  document.getElementById('qz-bar').style.width=(total/qzQs.length*100)+'%';
+  if(total===qzQs.length){const pct=Math.round(qzScore/qzQs.length*100);document.getElementById('qz-lbl').textContent=`Final score: ${qzScore}/35 (${pct}%) — ${pct>=85?'🎉 Excellent!':pct>=70?'👍 Good work!':'📚 Keep studying!'}`;}
+}
+function resetQuiz(){
+  qzScore=0;qzAnswered={};
+  document.getElementById('qz-score').textContent='0/35';
+  document.getElementById('qz-lbl').textContent='Answer all 35 questions';
+  document.getElementById('qz-bar').style.width='0%';
+  renderQuiz();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+renderQuiz();
+
+// ─────────────────────────────────────────
+// SECTION 11 — RAPID REVIEW
+// ─────────────────────────────────────────
+document.getElementById('s11-content').innerHTML=`
+<div class="g2" style="align-items:start;margin-bottom:20px">
+  <div>
+    <h3 style="font-size:15px;font-weight:700;color:var(--blue);margin-bottom:12px">📐 Code Structure Rules</h3>
+    <div class="rr"><strong>First 3 characters</strong> = ALWAYS the <strong>Category</strong> (the disease family)</div>
+    <div class="rr">Characters 4–7 add <strong>specificity</strong> — etiology, site, acuity, laterality, encounter type</div>
+    <div class="rr">Character 7 often = encounter type: <strong>A</strong> (initial), <strong>D</strong> (subsequent), <strong>S</strong> (sequela)</div>
+    <div class="rr">Placeholder <strong>X</strong> fills empty positions when 7th character is required</div>
+    <div class="rr">Codes range from <strong>3 to 7 characters</strong></div>
+    <div class="rr">First character is always a <strong>letter</strong>; second and third are numbers</div>
+
+    <h3 style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:12px;margin-top:20px">🔍 Main Term Rules</h3>
+    <div class="rr rr-gr">Main term = the <strong>CONDITION</strong> (disease, symptom) — never the anatomic site</div>
+    <div class="rr rr-gr">"Bacterial pneumonia" → main term = <strong>Pneumonia</strong>, not bacterial</div>
+    <div class="rr rr-gr">"Right knee pain" → main term = <strong>Pain</strong>, not right or knee</div>
+    <div class="rr rr-gr">Never search an adjective as the main term</div>
+    <div class="rr rr-gr">Subterms MODIFY the main term — use them to navigate the code tree</div>
+
+    <h3 style="font-size:15px;font-weight:700;color:var(--red);margin-bottom:12px;margin-top:20px">🚫 Common Student Mistakes</h3>
+    <div class="rr rr-re">❌ Searching the WHOLE PHRASE instead of just the main term</div>
+    <div class="rr rr-re">❌ Picking the most specific-looking code without documentation support</div>
+    <div class="rr rr-re">❌ Coding symptoms when a confirmed diagnosis is present</div>
+    <div class="rr rr-re">❌ Assuming laterality, type, or complication not documented</div>
+    <div class="rr rr-re">❌ Using "unspecified" when the note provides specific detail</div>
+    <div class="rr rr-re">❌ Confusing main term with anatomic site (site is a subterm)</div>
+    <div class="rr rr-re">❌ Forgetting the 7th character for fractures and injuries</div>
+    <div class="rr rr-re">❌ Coding "probable" or "suspected" diagnoses in OUTPATIENT coding</div>
+  </div>
+
+  <div>
+    <h3 style="font-size:15px;font-weight:700;color:var(--violet);margin-bottom:12px">🌳 How to Hunt Through the Tree</h3>
+    <div class="rr rr-vi"><strong>Step 1:</strong> Read the diagnosis phrase — identify the CONDITION</div>
+    <div class="rr rr-vi"><strong>Step 2:</strong> Look up the MAIN TERM in the ICD-10-CM Alphabetic Index</div>
+    <div class="rr rr-vi"><strong>Step 3:</strong> Follow SUBTERMS to add detail (type, etiology, site)</div>
+    <div class="rr rr-vi"><strong>Step 4:</strong> Take the suggested code to the TABULAR LIST — verify</div>
+    <div class="rr rr-vi"><strong>Step 5:</strong> Add any missing characters (laterality, severity, 7th character)</div>
+    <div class="rr rr-vi"><strong>Step 6:</strong> Confirm every character has documentation support</div>
+
+    <h3 style="font-size:15px;font-weight:700;color:var(--orange);margin-bottom:12px;margin-top:20px">⚠️ Disease Family Traps</h3>
+    <div class="rr rr-or">🩸 <strong>Diabetes:</strong> Type 1 (E10) vs Type 2 (E11) — never assume. Complications change the subcategory dramatically</div>
+    <div class="rr rr-or">💨 <strong>Asthma:</strong> Severity (mild intermittent/persistent, moderate, severe) + complication (uncomplicated / exacerbation / status) — both required</div>
+    <div class="rr rr-or">👂 <strong>Otitis:</strong> Media (middle) vs Externa (outer) vs interna. Suppurative (pus) vs nonsuppurative (fluid/effusion). Laterality required</div>
+    <div class="rr rr-or">🌿 <strong>Dermatitis:</strong> Allergic contact (immune) vs Irritant contact (chemical) vs Atopic (eczema) — substance/mechanism drives code</div>
+    <div class="rr rr-or">🔴 <strong>Anemia:</strong> Iron deficiency (D50) vs B12 deficiency (D51) vs Posthemorrhagic (D62) vs Anemia in CKD (D63.1) — etiology matters</div>
+    <div class="rr rr-or">🦠 <strong>Sinusitis:</strong> Acute (J01) vs Chronic (J32). Which sinus: maxillary, frontal, ethmoidal, sphenoidal, pansinusitis. "Pan" = all sinuses</div>
+
+    <h3 style="font-size:15px;font-weight:700;color:var(--yellow);margin-bottom:12px;margin-top:20px">💡 Glossary Quick Reference</h3>
+    <div class="rr rr-ye"><strong>NOS</strong> = Not Otherwise Specified (detail not given in documentation)</div>
+    <div class="rr rr-ye"><strong>NEC</strong> = Not Elsewhere Classified (condition known but no specific code exists)</div>
+    <div class="rr rr-ye"><strong>Laterality</strong> = which side of the body (right, left, bilateral)</div>
+    <div class="rr rr-ye"><strong>Manifestation</strong> = a condition caused BY another disease — often sequenced second</div>
+    <div class="rr rr-ye"><strong>Combination code</strong> = one code capturing TWO related conditions or a condition + complication</div>
+    <div class="rr rr-ye"><strong>Sequela (7th char S)</strong> = a late effect or complication AFTER the original condition has healed</div>
+    <div class="rr rr-ye"><strong>Acute on chronic</strong> = both acute flare and chronic baseline coexist — may require combination code</div>
+  </div>
+</div>
+
+<hr style="border:none;border-top:1.5px solid var(--bdr);margin:20px 0">
+
+<h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🎯 "If You See This, Think This" — High-Yield Cards</h3>
+<div class="cg">
+  <div class="card" style="border-top:4px solid var(--blue)">
+    <div class="ct" style="color:var(--blue)">💉 First 3 Characters of a Code</div>
+    <p style="font-size:12.5px">Always = the <strong>Category</strong>. The disease family. The broadest classification. Additional characters add specificity.</p>
+  </div>
+  <div class="card" style="border-top:4px solid var(--green)">
+    <div class="ct" style="color:var(--green)">🔍 "The note says X" — where do you start?</div>
+    <p style="font-size:12.5px">Identify the <strong>condition</strong> (the what, not the where or how). That condition = the main term. Look it up in the Alphabetic Index.</p>
+  </div>
+  <div class="card" style="border-top:4px solid var(--red)">
+    <div class="ct" style="color:var(--red)">❌ "Confirmed diagnosis is present" — do you code symptoms?</div>
+    <p style="font-size:12.5px"><strong>No.</strong> Symptoms integral to a confirmed diagnosis are NOT coded separately. Code the confirmed diagnosis.</p>
+  </div>
+  <div class="card" style="border-top:4px solid var(--orange)">
+    <div class="ct" style="color:var(--orange)">📋 "Probable" or "suspected" diagnosis — outpatient setting</div>
+    <p style="font-size:12.5px"><strong>Code the sign/symptom</strong>, NOT the probable/suspected condition. Different rule for inpatient (where uncertain diagnoses may be coded).</p>
+  </div>
+  <div class="card" style="border-top:4px solid var(--violet)">
+    <div class="ct" style="color:var(--violet)">🦷 "Unspecified" code — when is it appropriate?</div>
+    <p style="font-size:12.5px">ONLY when the documentation genuinely does not provide the specificity available in the code. Never use "unspecified" when the note gives you the information needed to be specific.</p>
+  </div>
+  <div class="card" style="border-top:4px solid var(--teal)">
+    <div class="ct" style="color:var(--teal)">🎯 "The note says Type 2 DM with [complication]" — what drives the code?</div>
+    <p style="font-size:12.5px">The TYPE of diabetes (E10/E11) + the COMPLICATION CATEGORY (ophthalmic=.3, neuro=.4, circulatory=.5, kidney=.2) + the SPECIFIC complication subcategory. Three layers of navigation.</p>
+  </div>
+  <div class="card" style="border-top:4px solid var(--yellow)">
+    <div class="ct" style="color:var(--yellow)">⚡ "Initial vs Subsequent encounter" for fractures</div>
+    <p style="font-size:12.5px">7th char <strong>A</strong> = First time definitive treatment given. <strong>D</strong> = Follow-up visits during healing. <strong>S</strong> = Complication/late effect after healing is complete.</p>
+  </div>
+  <div class="card" style="border-top:4px solid var(--pink)">
+    <div class="ct" style="color:var(--pink)">🌊 "Both conditions are documented separately — how to code?"</div>
+    <p style="font-size:12.5px">Check for a <strong>combination code</strong> first (one code for both). If none exists, code each condition separately. Never code a condition not documented.</p>
+  </div>
+  <div class="card" style="border-top:4px solid #374151">
+    <div class="ct">📊 Asthma Severity Quick Reference</div>
+    <div style="font-family:'Fira Mono',monospace;font-size:11.5px;background:var(--surf2);padding:10px;border-radius:var(--r)">
+      J45.2x — Mild <em>intermittent</em><br>
+      J45.3x — Mild <em>persistent</em><br>
+      J45.4x — Moderate <em>persistent</em><br>
+      J45.5x — Severe <em>persistent</em><br>
+      x0 = uncomplicated | x1 = exacerbation | x2 = status
+    </div>
+  </div>
+  <div class="card" style="border-top:4px solid var(--blue)">
+    <div class="ct" style="color:var(--blue)">🩺 Diabetes Complication Subcategories</div>
+    <div style="font-family:'Fira Mono',monospace;font-size:11px;background:var(--surf2);padding:10px;border-radius:var(--r)">
+      E11.2x — Kidney (CKD, nephropathy)<br>
+      E11.3x — Eye (retinopathy, cataract, macular)<br>
+      E11.4x — Neurological (neuropathy)<br>
+      E11.5x — Circulatory (peripheral vascular)<br>
+      E11.6x — Other (hyperglycemia, hypoglycemia)<br>
+      E11.9 — Without complications
+    </div>
+  </div>
+  <div class="card" style="border-top:4px solid var(--green)">
+    <div class="ct" style="color:var(--green)">🌿 Contact Dermatitis Logic</div>
+    <div style="font-size:12px;line-height:1.8">
+      <strong>L23</strong> = Allergic (immune reaction — latex, poison ivy, nickel, hair dye)<br>
+      <strong>L24</strong> = Irritant (direct damage — soap, detergents, acids)<br>
+      <strong>L25</strong> = Unspecified type<br>
+      <em>The SUBSTANCE drives allergic vs irritant.</em>
+    </div>
+  </div>
+  <div class="card" style="border-top:4px solid var(--orange)">
+    <div class="ct" style="color:var(--orange)">🏥 Hypertension Coding Rules</div>
+    <div style="font-size:12px;line-height:1.8">
+      <strong>I10</strong> = Essential (primary) HTN alone<br>
+      <strong>I11</strong> = HTN + heart disease<br>
+      <strong>I12</strong> = HTN + CKD (assumed related)<br>
+      <strong>I13</strong> = HTN + heart disease + CKD<br>
+      <em>HTN and CKD are assumed related — code I12 not I10+N18.</em>
+    </div>
+  </div>
+</div>
+
+<div class="al al-vi" style="margin-top:22px">🧠 <span><strong>Final Reminder:</strong> ICD-10-CM coding is not memorization — it is a thinking process. Find the main term. Follow the subterm path. Let the documentation guide every character. When in doubt: broad category first, then add specificity only what the documentation supports.</span></div>`;
+</script>
+</body>
+</html>
